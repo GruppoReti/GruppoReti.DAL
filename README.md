@@ -24,9 +24,8 @@ now in the Repo object you'll find all the methods needed to perform queries and
 Repo.Add
 Repo.AddAll
 Repo.Find
-Repo.IncludeMultiple
-```--> to include into the query result the nested entities because thsi project uses the eager loading pattern
-```c#
+Repo.IncludeMultiple --> to include into the query result the nested entities because thsi project uses the eager loading pattern
+
 Repo.Update
 Repo.Delete
 ....
