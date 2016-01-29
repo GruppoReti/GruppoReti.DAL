@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GruppoReti.DAL", "GruppoReti.DAL\GruppoReti.DAL.csproj", "{D77494D4-4975-495D-BC5E-1604E4FB4502}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GruppoReti.Entities", "GruppoReti.Entities\GruppoReti.Entities.csproj", "{C9C328A7-9F24-4A55-B841-2470CEEE9E04}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GruppoReti.Managers", "GruppoReti.Managers\GruppoReti.Managers.csproj", "{F5FB5B5D-491F-4B90-91C5-10343FEAECF3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D77494D4-4975-495D-BC5E-1604E4FB4502}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D77494D4-4975-495D-BC5E-1604E4FB4502}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D77494D4-4975-495D-BC5E-1604E4FB4502}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D77494D4-4975-495D-BC5E-1604E4FB4502}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9C328A7-9F24-4A55-B841-2470CEEE9E04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9C328A7-9F24-4A55-B841-2470CEEE9E04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9C328A7-9F24-4A55-B841-2470CEEE9E04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9C328A7-9F24-4A55-B841-2470CEEE9E04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5FB5B5D-491F-4B90-91C5-10343FEAECF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5FB5B5D-491F-4B90-91C5-10343FEAECF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5FB5B5D-491F-4B90-91C5-10343FEAECF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5FB5B5D-491F-4B90-91C5-10343FEAECF3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
