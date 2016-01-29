@@ -16,13 +16,18 @@ inside the Managers project there are some usage examples (work in progress plea
 BASIC USAGE
 ===========
 inside your manager class create a repository instance writing:
+```c#
 EFRepository<Entitiy_Name>  Repo = new EFRepository<Entity_Name>();
-
+```
 now in the Repo object you'll find all the methods needed to perform queries and other operations (INS, UPD, DEL)
+```c#
 Repo.Add
 Repo.AddAll
 Repo.Find
-Repo.IncludeMultiple--> to include into the query result the nested entities because thsi project uses the eager loading pattern
+Repo.IncludeMultiple
+```--> to include into the query result the nested entities because thsi project uses the eager loading pattern
+```c#
 Repo.Update
 Repo.Delete
 ....
+```
