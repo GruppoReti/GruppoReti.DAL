@@ -1,8 +1,10 @@
 ﻿using System;
-using System.Collections;
+using System.Collections.Concurrent;
 using System.Data.Entity;
+using System.Linq;
 using System.ServiceModel;
 using System.Threading;
+using GruppoReti.Entities.Entities;
 
 namespace GruppoReti.DAL
 {
@@ -13,13 +15,13 @@ namespace GruppoReti.DAL
 
     public static class GlobalUnitOfWork
     {
-        private static string CONTEXTKEY = "UnitOfWorkContext";
-        private static readonly Hashtable _threads = new Hashtable();
+        private const string CONTEXTKEY = "UnitOfWorkContext";
+        private static readonly ThreadLocal<IUnitOfWork> _threadUnitOfWork = new ThreadLocal<IUnitOfWork>(ThreadLocalUnitOfWorkFactory);
+        private static readonly ConcurrentDictionary<Thread, WeakReference<IUnitOfWork>> _threads = new ConcurrentDictionary<Thread, WeakReference<IUnitOfWork>>();
 
         public static void Commit()
         {
-            
-            IUnitOfWork unitOfWork = GetUnitOfWork();
+            var unitOfWork = GetUnitOfWork();
 
             if (unitOfWork != null)
             {
@@ -29,18 +31,7 @@ namespace GruppoReti.DAL
 
         public static IUnitOfWork Current
         {
-            get
-            {
-                IUnitOfWork unitOfWork = GetUnitOfWork();
-
-                if (unitOfWork == null)
-                {
-                    unitOfWork = new EFUnitOfWork(new GruppoReti.Entities.Entities.NORTHWNDEntities());
-                    SaveUnitOfWork(unitOfWork);
-                }
-
-                return unitOfWork;
-            }
+            get { return GetOrCreateUnitOfWork(); }
         }
 
         private static IUnitOfWork GetUnitOfWork()
@@ -55,48 +46,75 @@ namespace GruppoReti.DAL
             }
             else
             {
+                return _threadUnitOfWork.IsValueCreated ? _threadUnitOfWork.Value : null;
+            }
+        }
 
-                Thread thread = Thread.CurrentThread;
-                if (string.IsNullOrEmpty(thread.Name))
+        private static IUnitOfWork GetOrCreateUnitOfWork()
+        {
+            IUnitOfWork uow;
+
+            if (OperationContext.Current != null && OperationContext.Current.RequestContext != null)
+            {
+                if (OperationContext.Current.RequestContext.RequestMessage.Properties.ContainsKey(CONTEXTKEY))
                 {
-                    thread.Name = Guid.NewGuid().ToString();
-                    return null;
+                    uow = (IUnitOfWork)OperationContext.Current.RequestContext.RequestMessage.Properties[CONTEXTKEY];
                 }
                 else
                 {
-                    lock (_threads.SyncRoot)
-                    {
-                        return (IUnitOfWork)_threads[Thread.CurrentThread.Name];
-                    }
+                    uow = CreateUnitOfWork();
+                    OperationContext.Current.RequestContext.RequestMessage.Properties.Add(CONTEXTKEY, uow);
+                }
+            }
+            else
+            {
+                if (!_threadUnitOfWork.IsValueCreated)
+                {
+                    // We CleanupDead() only before creating a new UnitOfWork to avoid calling the cleanup procedure multiple times when it's not actually needed.
+                    CleanupDead();
+                }
+                uow = _threadUnitOfWork.Value;
+            }
+
+            return uow;
+        }
+
+        private static void CleanupDead()
+        {
+            var toCleanup = _threads.Keys.Where(x => !x.IsAlive).ToList();
+            foreach (var key in toCleanup)
+            {
+                WeakReference<IUnitOfWork> uowRef;
+                IUnitOfWork uow;
+                if (_threads.TryRemove(key, out uowRef) && uowRef != null && uowRef.TryGetTarget(out uow) && uow != null)
+                {
+                    uow.Dispose();
                 }
             }
         }
 
-        private static void SaveUnitOfWork(IUnitOfWork unitOfWork)
+        private static IUnitOfWork CreateUnitOfWork()
         {
-            if (OperationContext.Current != null && OperationContext.Current.RequestContext != null)
-            {
-                OperationContext.Current.RequestContext.RequestMessage.Properties.Add(CONTEXTKEY, unitOfWork);
-            }
-            else
-            {
-                lock (_threads.SyncRoot)
-                {
-                    _threads[Thread.CurrentThread.Name] = unitOfWork;
-                }
-            }
+            return new EFUnitOfWork(new NORTHWNDEntities());
+        }
+
+        private static IUnitOfWork ThreadLocalUnitOfWorkFactory()
+        {
+            var uow = CreateUnitOfWork();
+            _threads[Thread.CurrentThread] = new WeakReference<IUnitOfWork>(uow);
+            return uow;
         }
     }
 
     public class EFUnitOfWork : IUnitOfWork, IDisposable
     {
-        public DbContext Context { get; private set; }
-
         public EFUnitOfWork(DbContext context)
         {
             Context = context;
             //context.Configuration.LazyLoadingEnabled = true;
         }
+
+        public DbContext Context { get; private set; }
 
         public int Commit()
         {
@@ -105,13 +123,27 @@ namespace GruppoReti.DAL
 
         public void Dispose()
         {
-            if (Context != null)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            // Context == null means already disposed. Consider adding explicit variable if more disposable resources are added.
+            if (Context == null)
+                return;
+
+            if (disposing)
             {
+                // Dispose managed resources.
                 Context.Dispose();
-                Context = null;
             }
 
-            GC.SuppressFinalize(this);
+            // Dispose unmanaged resources (none here)
+            // ...
+
+            // Mark as disposed.
+            Context = null;
         }
     }
 }
