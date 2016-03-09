@@ -44,6 +44,12 @@ namespace GruppoReti.DAL
                 }
                 return null;
             }
+            else if (HttpContext.Current != null)
+            {
+                if (HttpContext.Current.Items.Contains(CONTEXTKEY))
+                    return (IUnitOfWork)HttpContext.Current.Items[CONTEXTKEY];
+                return null;
+            }
             else
             {
                 return _threadUnitOfWork.IsValueCreated ? _threadUnitOfWork.Value : null;
@@ -66,6 +72,16 @@ namespace GruppoReti.DAL
                     OperationContext.Current.RequestContext.RequestMessage.Properties.Add(CONTEXTKEY, uow);
                 }
             }
+            else if (HttpContext.Current != null)
+            {
+                if (HttpContext.Current.Items.Contains(CONTEXTKEY))
+                    uow = (IUnitOfWork)HttpContext.Current.Items[CONTEXTKEY];
+                else
+                {
+                    uow = CreateUnitOfWork();
+                    HttpContext.Current.Items.Add(CONTEXTKEY, uow);
+                }
+            }
             else
             {
                 if (!_threadUnitOfWork.IsValueCreated)
@@ -79,6 +95,7 @@ namespace GruppoReti.DAL
             return uow;
         }
 
+      
         private static void CleanupDead()
         {
             var toCleanup = _threads.Keys.Where(x => !x.IsAlive).ToList();
