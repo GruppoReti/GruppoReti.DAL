@@ -1,17 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
-using System.Data.Entity.Core;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace GruppoReti.DAL.Repositories
+namespace SAIPEM.YARPO.DAL.Repositories
 {
     public class EFRepository<TEntity> : IRepository<TEntity> where TEntity : class
     {
         private DbContext _context { get; set; }
         private DbSet<TEntity> _dbSet { get; set; }
 
+        public EFRepository() 
+        {
+            //this.Context.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
+        }
+
+        /// <summary>
+        /// specifiy a connection timeout in seconds
+        /// </summary>
+        /// <param name="Timeout"></param>
+        public EFRepository(int Timeout)
+        {
+            this.Context.Database.CommandTimeout = Timeout;
+        }
+        
         protected DbContext Context
         {
             get
@@ -73,12 +86,11 @@ namespace GruppoReti.DAL.Repositories
 
         public void Delete(TEntity entity)
         {
-                if (Context.Entry(entity).State == System.Data.Entity.EntityState.Detached)
-                {
-                    DbSet.Attach(entity);
-                }
-                DbSet.Remove(entity);
-            
+            if (Context.Entry(entity).State == System.Data.Entity.EntityState.Detached)
+            {
+                DbSet.Attach(entity);
+            }
+            DbSet.Remove(entity);
         }
 
         public void DeleteAll(List<TEntity> listToDelete)
